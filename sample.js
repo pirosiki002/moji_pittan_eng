@@ -1,6 +1,8 @@
 // グローバル
 // div要素を格納
 var cards = [];
+
+
 // 開始時間
 var startTime;
 // 経過秒数用 タイマーID
@@ -15,23 +17,33 @@ var cardFirst;
 var countUnit = 0;
 
 //記憶しているアルファベット
-let mem_e_word = null;
+let g_mem_e_word = null;
+
+let COL_CNT = 5;
+let ROW_CNT = 4;
 
 window.onload = function(){
     // 数字格納 一時配列
     var arr = [];
-    
-    for (var i = 0; i < 10; i++){
-        // ペアの数字を10組
-        arr.push(i);
-        arr.push(i);
+    var alf_arr =[];    //アルファベット格納配列
+
+    let count = 1;
+    for (var i = 1; i <= COL_CNT; i++){
+        for(var j = 1; j <= ROW_CNT; j++){
+            // arr.push(i);
+            // arr.push(i);
+            arr.push(count++);
+        }
     }
+
+    console.log("arr", arr);
+    //座標情報を持たせたい
     
     /* この時点で配列にはarr[0]=0, arr[1]=0, arr[2]=1, arr[3]=1...といったふうに、０～９まで2つずつ設定されている*/
 
 
     // シャッフル
-    shuffle(arr);
+    // shuffle(arr);
     
     var panel = document.getElementById('panel');
     
@@ -51,12 +63,13 @@ window.onload = function(){
     /* a～zまで設定する */
     for (let i = 'a'.charCodeAt(0); i <= 'z'.charCodeAt(0); i++){
       var div = document.createElement('div');
-      div.className = 'card back';
+      div.className = 'card back';  //ここでHtmlのカード表示をしている？？？
+    //   div.className = 'alf';
       div.index = i;
-      div.number = arr[i];
+      div.number = alf_arr[i];
       div.innerHTML = String.fromCharCode([i]); /* アルファベットを取ってくれる便利なやーつ*/
-      // div.onclick = turn;
-      div.onclick = save_e_word(i);
+      div.onclick = alf; //これがクリックされた時のイベント。alf()内に処理を入れている。
+    //   div.onclick = save_e_word(i);
       e_word_list.appendChild(div);
       cards.push(div);
     }
@@ -73,25 +86,17 @@ window.onload = function(){
 
 // アルファベットを保持する関数
 function save_e_word(alf){
-  mem_e_word = alf;
+    g_mem_e_word = alf;
 
 }
+
 
 // シャッフル用関数
 function shuffle(arr) {
-    var n = arr.length;
-    var temp, i;
-
-    while (n) {
-        i = Math.floor(Math.random() * n--);
-        temp = arr[n];
-        arr[n] = arr[i];
-        arr[i] = temp;
-    }
-    return arr;
 }
 
 // クリック時の処理
+// アルファベットゾーンがクリックされたか、空白ゾーンがクリックされたかを、切り分ける必要がある
 function turn(e){
     
     var div = e.target;
@@ -102,64 +107,41 @@ function turn(e){
     // 裏向きのカードをクリックした場合は数字を表示する
     if (div.innerHTML == ''){
         div.className = 'card';
-        div.innerHTML = div.number; 
+        // div.innerHTML = div.number; 
+        //debug
+        console.log("get_e_word() =", get_e_word());
+        // div.innerHTML = div.get_e_word();
+        div.innerHTML = get_e_word();
+
+        //ここで、最後にクリックしたアルファベットを設定できるようにする。
+        //現在選択中のアルファベットをどこかで常に表示してあげると良い
     }else{
         // 数字が表示されているカードは return
         return;
     }
-
-    /* 選択したアルファベットを貼り付ける（NULLじゃなければ）*/
-    /* **********なぜか全て122になる。。要調査！！ ************** */
-    // if (div.innerHTML == ''){
-    //     div.className = 'card';
-    //     if(mem_e_word != null){
-    //       div.innerHTML = mem_e_word; 
-    //     }
-    // }else{
-    //     // 数字が表示されているカードは return
-    //     return;
-    // }
-
     
-    // 1枚目の処理
-    if (flgFirst){
-        // cardFirst は2枚目の処理のときに使う
-        cardFirst = div;
-        // フラグ変更
-        flgFirst = false;
-        
-    // 2枚目の処理
-    }else{
-        
-        // 数字が1枚目と一致する場合
-        if (cardFirst.number == div.number){
-            countUnit++;
-            // 見えない状態にする
-            backTimer = setTimeout(function(){
-                div.className = 'card finish';
-                cardFirst.className = 'card finish';
-                backTimer = NaN;
-                
-                if (countUnit == 10){
-                    clearInterval(timer);  // timer終了
-                }
-            }, 500)
 
-        // 一致しない場合
-        }else{  
-            // カードを裏側に戻す
-            backTimer = setTimeout(function(){
-                div.className = 'card back';
-                div.innerHTML = '';
-                cardFirst.className = 'card back';
-                cardFirst.innerHTML = '';
-                cardFirst = null;
-                backTimer = NaN;
-            }, 500);
-        }
-        
-        flgFirst = true;
-    }  
+    //単語が成立しているか判断する
+    //座標情報を持たせた方が良いかも
+}
+
+function alf(e){
+    console.log("alf() call!!!");
+
+    var div = e.target;
+
+    //アルファベットのカードがクリックされた場合は、カードのアルファベット情報を保存
+    save_e_word(div.innerHTML);
+
+    //保持しているアルファベットを表示
+    var re = document.getElementById('save_alf');
+    re.innerHTML = "現在選択中：" + get_e_word();
+
+}
+
+// 保持しているアルファベットを返す関数
+function get_e_word(){
+    return g_mem_e_word;
 }
 
 // タイマー開始
